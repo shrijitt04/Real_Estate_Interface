@@ -12,7 +12,7 @@ import jakarta.annotation.security.PermitAll;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 @PageTitle("Hello Flow")
-@Route("")
+// @Route("")
 @Menu(order = 0, icon = LineAwesomeIconUrl.GLOBE_SOLID)
 @PermitAll
 public class HelloFlowView extends HorizontalLayout {

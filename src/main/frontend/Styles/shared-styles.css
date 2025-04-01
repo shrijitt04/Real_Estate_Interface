@@ -1,0 +1,155 @@
+/* Main layout styles */
+:root {
+  --dark-bg: #5c5ce8; /* Darker for better contrast */
+  --card-bg: #22243a;
+  --primary-color: #ff6bcb; /* More vibrant primary */
+  --secondary-color: #1e90ff;
+  --success-color: #2ae98d;
+  --text-color: #ffffff;
+  --text-secondary: #b3b3b3;
+}
+
+html, body {
+  background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+  color: var(--text-color);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Header */
+.header {
+  background-color: var(--card-bg);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  padding: 0.8rem 1.5rem;
+}
+
+.logo {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.welcome-text {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+/* Content */
+.content {
+  background-color: var(--dark-bg);
+  padding: 2rem;
+}
+
+/* Menu button styles */
+.menu-button {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--text-color);
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
+}
+
+.menu-button:hover {
+  background-color: rgba(255, 107, 203, 0.2);
+  color: var(--primary-color);
+  transform: translateX(5px);
+}
+
+/* Stat Cards */
+.stat-card {
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 107, 203, 0.3);
+}
+
+.stat-icon {
+  color: var(--primary-color);
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+  color: var(--text-color);
+  font-weight: bold;
+}
+
+.stat-title {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Property Cards */
+.property-card {
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding-bottom: 1rem;
+  width: 320px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.property-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.property-card h3 {
+  margin: 1rem 1rem 0.5rem;
+}
+
+.property-card p {
+  margin: 0.5rem 1rem;
+  color: var(--text-secondary);
+}
+
+.property-price {
+  display: block;
+  margin: 0 1rem;
+  color: var(--success-color);
+  font-weight: bold;
+  font-size: 1.3rem;
+}
+
+.view-button {
+  margin: 0.5rem 1rem;
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.view-button:hover {
+  background-color: var(--primary-color);
+  box-shadow: 0 4px 10px rgba(255, 107, 203, 0.4);
+}
+
+/* Activity List */
+.activity-item {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.activity-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.time-text {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}

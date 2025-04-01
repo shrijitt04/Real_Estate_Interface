@@ -1,0 +1,83 @@
+/* Entrance animations */
+.fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  
+  .slide-in-from-left {
+    animation: slideInFromLeft 0.8s ease-in-out;
+  }
+  
+  .slide-in-from-right {
+    animation: slideInFromRight 0.8s ease-in-out;
+  }
+  
+  .slide-in-from-bottom {
+    animation: slideInFromBottom 0.8s ease-in-out;
+  }
+  
+  /* Hover animations */
+  .pulse-on-hover:hover {
+    animation: pulse 1s infinite;
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  .scale-on-hover:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideInFromBottom {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(225, 78, 202, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(225, 78, 202, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(225, 78, 202, 0);
+    }
+  }
