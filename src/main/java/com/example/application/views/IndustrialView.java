@@ -9,16 +9,16 @@ import java.util.List;
 import com.example.application.service.PropertyService;
 import com.example.application.model.Property;
 
-@PageTitle("Commercial Properties")
-@Route("commercial")
-public class CommercialView extends VerticalLayout {
+@PageTitle("Industrial Properties")
+@Route("industrial")
+public class IndustrialView extends VerticalLayout {
     private final PropertyService propertyService;
     private final Grid<Property> grid = new Grid<>(Property.class);
 
     @Autowired
-    public CommercialView(PropertyService propertyService) {
+    public IndustrialView(PropertyService propertyService) {
         this.propertyService = propertyService;
-        List<Property> properties = propertyService.getPropertiesByType("COMMERCIAL");
+        List<Property> properties = propertyService.getPropertiesByType("INDUSTRIAL");
         grid.setItems(properties);
 
         grid.setColumns("propertyId", "title", "location", "price", "size", "status", "description");

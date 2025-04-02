@@ -1,0 +1,102 @@
+/* Commercial Properties View Styles */
+.commercial-properties-view {
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.page-title {
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    font-weight: 600;
+}
+
+.section {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: #34495e;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    font-weight: 500;
+}
+
+.properties-container,
+.appointments-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+}
+
+/* Property and Appointment Boxes */
+.property-box,
+.appointment-box {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 280px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+.property-box {
+    background-color: #f8f9fa;
+}
+
+.appointment-box {
+    background-color: #f0f7ff;
+}
+
+/* Rise up animation on hover */
+.animated-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Box content styling */
+.box-title {
+    display: block;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.box-detail {
+    display: block;
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-bottom: 5px;
+}
+
+.box-price {
+    display: block;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #27ae60;
+    margin: 10px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .properties-container,
+    .appointments-container {
+        justify-content: center;
+    }
+    
+    .property-box,
+    .appointment-box {
+        width: 100%;
+        max-width: 320px;
+    }
+}

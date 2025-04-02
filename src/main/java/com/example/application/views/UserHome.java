@@ -57,6 +57,12 @@ public class UserHome extends VerticalLayout {
                 if(event.getValue().equals("COMMERCIAL")){
                     getUI().ifPresent(ui -> ui.navigate("commercial"));
                 }
+                if(event.getValue().equals("INDUSTRIAL")){
+                    getUI().ifPresent(ui -> ui.navigate("industrial"));
+                }
+                if(event.getValue().equals("RESIDENTIAL")){
+                    getUI().ifPresent(ui -> ui.navigate("residential"));
+                }
                 // In a real application, you would navigate to the selected property type page
                 Paragraph selectionInfo = new Paragraph("You selected: " + event.getValue());
                 selectionInfo.getElement().getStyle().set("animation", "fadeIn 1s ease-in-out");
