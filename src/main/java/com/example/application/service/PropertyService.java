@@ -18,4 +18,8 @@ public class PropertyService {
     public List<Property> getPropertiesByType(String type) {
         return propertyRepository.findByType(type.toUpperCase());
     }
+
+    public Property saveProperty(Property property){
+        return propertyRepository.save(property);
+    }
 }
