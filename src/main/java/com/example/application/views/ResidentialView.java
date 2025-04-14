@@ -20,9 +20,9 @@ import com.example.application.service.PropertyService;
 import com.example.application.model.Appointment;
 import com.example.application.model.Property;
 
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+// import org.springframework.security.core.context.SecurityContextHolder;
+// import org.springframework.security.core.Authentication;
+// import org.springframework.security.core.userdetails.UserDetails;
 
 
 @PageTitle("Residential Properties")

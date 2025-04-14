@@ -57,7 +57,7 @@ public class LoginView extends VerticalLayout {
             if (authService.login(email, password, role, userService)) {
                 Notification.show("Login successful!");
                 if (role=="Admin"){
-                    getUI().ifPresent(ui -> ui.navigate("admin_home"));
+                    getUI().ifPresent(ui -> ui.navigate("admin"));
                 }
                 else{
                     getUI().ifPresent(ui -> ui.navigate("User_Home"));

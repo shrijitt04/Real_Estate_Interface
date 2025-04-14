@@ -1,41 +1,48 @@
 package com.example.application.views;
 
-import com.example.application.model.User;
+import java.util.List;
+
+import com.example.application.model.Property;
 import com.example.application.service.AuthService;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Paragraph;
+import com.example.application.service.PropertyService;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-@Route("admin_home")
+@Route("admin")
 @PageTitle("Home | Real Estate App")
 public class HomeView extends VerticalLayout implements BeforeEnterObserver {
 
     private final AuthService authService;
+    private final PropertyService propertyService;
 
-    public HomeView(AuthService authService) {
+    public HomeView(AuthService authService, PropertyService propertyService) {
         this.authService = authService;
-        
-        if (authService.isLoggedIn()) {
-            User currentUser = authService.getCurrentUser();
-            
-            H2 title = new H2("Welcome to Real Estate App");
-            H3 welcomeMessage = new H3("Hello, " + currentUser.getName() + "!");
-            Paragraph userInfo = new Paragraph("Email: " + currentUser.getEmail());
-            Paragraph roleInfo = new Paragraph("Role: " + currentUser.getRole());
-            
-            Button logoutButton = new Button("Logout", event -> {
-                authService.logout();
-                getUI().ifPresent(ui -> ui.navigate("login"));
-            });
-            
-            add(title, welcomeMessage, userInfo, roleInfo, logoutButton);
-        }
+        this.propertyService = propertyService;
+
+        setSizeFull();
+        setPadding(true);
+        setSpacing(true);
+
+        List<Property> properties = propertyService.getAllProperties();
+
+        Grid<Property> propertyGrid = new Grid<>(Property.class);
+        propertyGrid.setItems(properties);
+
+        // Only show the fields you want (optional)
+        propertyGrid.setColumns("title", "location", "price", "type", "status");
+
+        // Optional: Set column headers
+        propertyGrid.getColumnByKey("title").setHeader("Title");
+        propertyGrid.getColumnByKey("location").setHeader("Location");
+        propertyGrid.getColumnByKey("price").setHeader("Price");
+        propertyGrid.getColumnByKey("type").setHeader("Type");
+        propertyGrid.getColumnByKey("status").setHeader("Status");
+
+        add(propertyGrid);
     }
 
     @Override
