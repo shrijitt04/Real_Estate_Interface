@@ -11,6 +11,11 @@ import com.vaadin.flow.component.orderedlayout.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -131,21 +136,51 @@ public class IndustrialView extends VerticalLayout {
         dialog.open();
     }
 
+    
     private void saveAppointmentAndSendEmail(Property property, LocalDateTime dateTime) {
-        // Replace with logged-in user's ID/email in real use case
-        String userId = "pes2ug22cs543@pesu.pes.edu";
 
+        String loggedInUserEmail = null; 
+        String filePath = "email.txt";   
+        try {
+            loggedInUserEmail = Files.readString(Paths.get(filePath));
+            System.out.println("!!!WARNING!!! Read potentially incorrect email from file: " + loggedInUserEmail);
+    
+            if (loggedInUserEmail != null) {
+                 loggedInUserEmail = loggedInUserEmail.trim();
+            }
+    
+        } catch (NoSuchFileException e) {
+            System.err.println("Temporary email file not found: " + filePath + ". Cannot determine user.");
+            throw new IllegalStateException("User email file not found, cannot save appointment.", e);
+        } catch (IOException e) {
+            System.err.println("!!!ERROR!!! Failed to read email from temporary file: " + e.getMessage());
+            throw new RuntimeException("Failed to read user email file.", e);
+            
+        }
+    
+        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+            System.err.println("!!!ERROR!!! Email read from file is null or empty. Aborting operation.");
+            
+            throw new IllegalStateException("User email retrieved from file was empty.");
+    
+        }
+    
+        System.out.println("Proceeding with email retrieved from file: " + loggedInUserEmail);
+    
         Appointment appointment = new Appointment();
         appointment.setDateTime(dateTime);
-        appointment.setNotes("industrial appointment");
+        appointment.setNotes("Residential appointment");
         appointment.setStatus(Appointment.Status.CONFIRMED);
         appointment.setProperty(property);
-
-        appointment.setUserId(userId);
-
-        appointmentService.saveAppointment(appointment);
-
     
-        emailService.sendConfirmationEmail(userId, property, dateTime);
+        
+        appointment.setUserId(loggedInUserEmail); 
+    
+        appointmentService.saveAppointment(appointment);
+        System.out.println("Appointment saved for user ID (from file): " + loggedInUserEmail);
+    
+        emailService.sendConfirmationEmail(loggedInUserEmail, property, dateTime); 
+        System.out.println("Confirmation email triggered for (from file): " + loggedInUserEmail);
+    
     }
 }

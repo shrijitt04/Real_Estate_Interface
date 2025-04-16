@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:8080")  // Enable CORS
+@CrossOrigin(origins = "http://localhost:8080")  
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -26,7 +26,7 @@ public class UserController {
     public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
         Optional<User> user = userService.getUserByEmail(email);
         return user.map(ResponseEntity::ok)
-               .orElseGet(() -> ResponseEntity.badRequest().build());  // Fixed type mismatch
+               .orElseGet(() -> ResponseEntity.badRequest().build()); 
 }
 
     
