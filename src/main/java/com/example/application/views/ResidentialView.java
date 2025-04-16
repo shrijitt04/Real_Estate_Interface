@@ -11,6 +11,10 @@ import com.vaadin.flow.component.orderedlayout.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,9 +24,6 @@ import com.example.application.service.PropertyService;
 import com.example.application.model.Appointment;
 import com.example.application.model.Property;
 
-// import org.springframework.security.core.context.SecurityContextHolder;
-// import org.springframework.security.core.Authentication;
-// import org.springframework.security.core.userdetails.UserDetails;
 
 
 @PageTitle("Residential Properties")
@@ -139,7 +140,12 @@ public class ResidentialView extends VerticalLayout {
     private void saveAppointmentAndSendEmail(Property property, LocalDateTime dateTime) {
         
         // Replace with logged-in user's ID/email in real use case
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println(email);
+
         String userId = "pes2ug22cs543@pesu.pes.edu";
+
+
 
         Appointment appointment = new Appointment();
         appointment.setDateTime(dateTime);

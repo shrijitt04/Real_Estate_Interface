@@ -9,3 +9,6 @@ import com.example.application.model.Property;
 public interface PropertyRepository extends JpaRepository<Property, Long> {
     List<Property> findByType(String type);
 }
+
+
+

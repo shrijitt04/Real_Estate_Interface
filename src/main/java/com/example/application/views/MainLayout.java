@@ -9,7 +9,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 @CssImport("./styles/commercial-view.css")
 @CssImport("./styles/residential-view.css")
 @CssImport("./styles/industrial-view.css")
-
+@CssImport("./styles/admin-view.css")
 @CssImport("./styles/shared-styles.css")
 
 public class MainLayout extends AppLayout {

@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import com.example.application.repository.PropertyRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import com.example.application.model.Property;
 
 @Service
@@ -21,5 +24,11 @@ public class PropertyService {
 
     public Property saveProperty(Property property){
         return propertyRepository.save(property);
+    }
+
+    public void deleteProperty(long id){
+        if(propertyRepository.existsById(id)){
+            propertyRepository.deleteById(id);
+        }
     }
 }
