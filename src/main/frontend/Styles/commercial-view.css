@@ -1,11 +1,9 @@
-/* Main view styles */
 .commercial-view {
-    background-color: #1e1e1e;
+    background-color: #6B84B6;
     color: white;
     padding: 20px;
   }
   
-  /* View header */
   .view-header {
     color: white;
     font-size: 2.2rem;
@@ -13,7 +11,6 @@
     text-align: center;
   }
   
-  /* Property card container */
   .property-card-container {
     display: flex;
     flex-wrap: wrap;
@@ -97,7 +94,13 @@
     background-color: #ffc107;
     color: black;
   }
-  
+  .register-button {
+    background-color: #FF9800;  /* Different color */
+    color: white;
+    font-weight: bold;
+    width: 100%;
+}
+
   /* Button styles */
   .button-container {
     display: flex;

@@ -24,6 +24,8 @@ import com.example.application.service.EmailService;
 import com.example.application.service.PropertyService;
 import com.example.application.model.Appointment;
 import com.example.application.model.Property;
+import com.example.application.model.Transactions;
+import com.example.application.service.TransactionService;
 
 @PageTitle("Industrial Properties")
 @Route("industrial")
@@ -33,12 +35,14 @@ public class IndustrialView extends VerticalLayout {
     private final PropertyService propertyService;
     private final AppointmentService appointmentService;
     private final EmailService emailService;
+    private final TransactionService transactionService;
 
     @Autowired
-    public IndustrialView(PropertyService propertyService, AppointmentService appointmentService, EmailService emailService) {
+    public IndustrialView(PropertyService propertyService, AppointmentService appointmentService, EmailService emailService, TransactionService transactionService) {
         this.propertyService = propertyService;
         this.appointmentService = appointmentService;
         this.emailService = emailService;
+        this.transactionService = transactionService;
 
         List<Property> properties = propertyService.getPropertiesByType("INDUSTRIAL");
 
@@ -104,7 +108,25 @@ public class IndustrialView extends VerticalLayout {
             bookButton.addClickListener(e -> openAppointmentDialog(property));
         }
 
-        buttonLayout.add(bookButton);
+        Button registerButton = new Button("Register Land");
+        registerButton.addClassName("register-button");
+        registerButton.getElement().getStyle().set("background-color", "#FF9800");  // Custom color for "Register Land"
+
+        if (!"AVAILABLE".equalsIgnoreCase(property.getStatus())) {
+            registerButton.setEnabled(false);
+            registerButton.addClassName("disabled-button");
+        } else {
+            long propertyID = property.getPropertyId();
+            if(transactionService.hasUserRegisteredForProperty(getLoggedInUserEmail(), propertyID)){
+                registerButton.setEnabled(false);
+                registerButton.addClassName("disabled-button");
+                Notification.show("You have already registerd for this land",5000,Notification.Position.MIDDLE);            }
+            else{
+                registerButton.addClickListener(e -> openRegisterDialog(property));
+            }
+        }
+
+        buttonLayout.add(bookButton, registerButton);
 
         card.add(title, infoDiv, description, price, status, buttonLayout);
 
@@ -136,51 +158,84 @@ public class IndustrialView extends VerticalLayout {
         dialog.open();
     }
 
-    
-    private void saveAppointmentAndSendEmail(Property property, LocalDateTime dateTime) {
+    private void openRegisterDialog(Property property) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Confirm Registration");
 
-        String loggedInUserEmail = null; 
-        String filePath = "email.txt";   
-        try {
-            loggedInUserEmail = Files.readString(Paths.get(filePath));
-            System.out.println("!!!WARNING!!! Read potentially incorrect email from file: " + loggedInUserEmail);
-    
-            if (loggedInUserEmail != null) {
-                 loggedInUserEmail = loggedInUserEmail.trim();
-            }
-    
-        } catch (NoSuchFileException e) {
-            System.err.println("Temporary email file not found: " + filePath + ". Cannot determine user.");
-            throw new IllegalStateException("User email file not found, cannot save appointment.", e);
-        } catch (IOException e) {
-            System.err.println("!!!ERROR!!! Failed to read email from temporary file: " + e.getMessage());
-            throw new RuntimeException("Failed to read user email file.", e);
-            
+        VerticalLayout dialogLayout = new VerticalLayout();
+        Paragraph confirmationText = new Paragraph("Are you sure you want to register this land?");
+        Button confirmButton = new Button("Yes, Register", event -> {
+            processRegistration(property);
+            dialog.close();
+
+            Notification.show("Land registered successfully!", 3000, Notification.Position.TOP_CENTER);
+        });
+        Button cancelButton = new Button("Cancel", event -> dialog.close());
+
+        dialogLayout.add(confirmationText, confirmButton, cancelButton);
+        dialog.add(dialogLayout);
+        dialog.open();
+    }
+
+    private void processRegistration(Property property) {
+            try {
+            Thread.sleep(3000);  
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-    
+
+        String loggedInUserEmail = getLoggedInUserEmail();
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            System.err.println("!!!ERROR!!! Email read from file is null or empty. Aborting operation.");
-            
-            throw new IllegalStateException("User email retrieved from file was empty.");
-    
+            Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
+            return;
         }
-    
-        System.out.println("Proceeding with email retrieved from file: " + loggedInUserEmail);
-    
+
+        Transactions transaction = new Transactions();
+        transaction.setAmount(50.00); 
+        transaction.setBuyerId(loggedInUserEmail);
+        transaction.setPropertyId((long)property.getPropertyId());
+        transaction.setStatus("PENDING"); 
+
+        transactionService.saveTransaction(transaction);
+
+        // Simulate completing the transaction
+        transaction.setStatus("COMPLETED");
+        transactionService.updateTransaction(transaction);
+        String token = transaction.getToken();
+        emailService.sendTransactionEmail(loggedInUserEmail, property, token);
+
+        System.out.println("Transaction completed for user: " + loggedInUserEmail);
+    }
+
+    private String getLoggedInUserEmail() {
+        String loggedInUserEmail = null;
+        String filePath = "email.txt";
+        try {
+            loggedInUserEmail = Files.readString(Paths.get(filePath)).trim();
+            System.out.println("Read email: " + loggedInUserEmail);
+        } catch (NoSuchFileException e) {
+            System.err.println("Email file not found: " + filePath);
+        } catch (IOException e) {
+            System.err.println("Error reading email from file: " + e.getMessage());
+        }
+        return loggedInUserEmail;
+    }
+
+    private void saveAppointmentAndSendEmail(Property property, LocalDateTime dateTime) {
+        String loggedInUserEmail = getLoggedInUserEmail();
+        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+            Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
+            return;
+        }
+
         Appointment appointment = new Appointment();
         appointment.setDateTime(dateTime);
-        appointment.setNotes("Residential appointment");
+        appointment.setNotes("Commercial appointment");
         appointment.setStatus(Appointment.Status.CONFIRMED);
         appointment.setProperty(property);
-    
-        
-        appointment.setUserId(loggedInUserEmail); 
-    
+        appointment.setUserId(loggedInUserEmail);
+
         appointmentService.saveAppointment(appointment);
-        System.out.println("Appointment saved for user ID (from file): " + loggedInUserEmail);
-    
-        emailService.sendConfirmationEmail(loggedInUserEmail, property, dateTime); 
-        System.out.println("Confirmation email triggered for (from file): " + loggedInUserEmail);
-    
+        emailService.sendConfirmationEmail(loggedInUserEmail, property, dateTime);
     }
 }

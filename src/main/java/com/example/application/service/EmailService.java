@@ -24,4 +24,13 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendTransactionEmail(String To, Property property, String token){
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(To);
+        message.setSubject("Registration Confirmation");
+        message.setText("Hello, \n\n Congratulations!!\n\nYou have successfully registered for the land titled\" "+property.getTitle()+ "\n\nYour token number is \" "+token+"\n\nThis token number will be used for further land process.\n\n Thank you!");
+
+        mailSender.send(message);
+    }
 }
