@@ -33,4 +33,23 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendIntialEmail(String To){
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(To);
+        message.setSubject("Appointment Initiated");
+        message.setText("Hello! \n\nYour appointment request has been received and the process has been initiated.\n\n An email confirmation will be sent to you regarding the same. \n\n Thank You! ");
+        mailSender.send((message));
+    }
+
+    public void sendRejectionEmail(String To, Property property){
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(To);
+        message.setSubject("Appointment Confirmation");
+        message.setText("Hello,\n\nYour appointment for the property titled \"" +
+                property.getTitle() + "\" located at " + property.getLocation() +
+                " has been rejected due to unavailable slots. \n\n Please try again after a few days. " + ".\n\nThank you!");
+        mailSender.send(message);
+
+    }
 }

@@ -5,6 +5,9 @@ import com.example.application.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.util.*;
+
 @Service
 public class AppointmentService {
 
@@ -15,4 +18,11 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
     
+    public List<Appointment> displayAllAppointments(){
+        return appointmentRepository.findAll();
+    }
+
+    public void deleteAppointment(BigInteger id){
+        appointmentRepository.deleteById(id);
+    }
 }

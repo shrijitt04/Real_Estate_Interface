@@ -11,9 +11,6 @@ import com.vaadin.flow.component.orderedlayout.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -150,7 +147,9 @@ public class ResidentialView extends VerticalLayout {
         Button confirmButton = new Button("Confirm", event -> {
             LocalDateTime selectedDateTime = dateTimePicker.getValue();
             if (selectedDateTime != null) {
-                saveAppointmentAndSendEmail(property, selectedDateTime);
+                sendIntialEmail(selectedDateTime, property);
+
+                // saveAppointmentAndSendEmail(property, selectedDateTime);
                 dialog.close();
                 Notification.show("Appointment booked!", 3000, Notification.Position.TOP_CENTER);
             } else {
@@ -180,6 +179,24 @@ public class ResidentialView extends VerticalLayout {
         dialogLayout.add(confirmationText, confirmButton, cancelButton);
         dialog.add(dialogLayout);
         dialog.open();
+    }
+
+    private void sendIntialEmail(LocalDateTime dateTime, Property property){
+        String loggedInUserEmail = getLoggedInUserEmail();
+        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+            Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
+            return;
+        }
+        Appointment appointment = new Appointment();
+        appointment.setDateTime(dateTime);
+        appointment.setNotes("Commercial appointment");
+        appointment.setStatus(Appointment.Status.PENDING);
+        appointment.setProperty(property);
+        appointment.setUserId(loggedInUserEmail);
+        appointmentService.saveAppointment(appointment);
+
+        emailService.sendIntialEmail(loggedInUserEmail);
+
     }
 
     private void processRegistration(Property property) {
@@ -226,21 +243,4 @@ public class ResidentialView extends VerticalLayout {
         return loggedInUserEmail;
     }
 
-    private void saveAppointmentAndSendEmail(Property property, LocalDateTime dateTime) {
-        String loggedInUserEmail = getLoggedInUserEmail();
-        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
-            return;
-        }
-
-        Appointment appointment = new Appointment();
-        appointment.setDateTime(dateTime);
-        appointment.setNotes("Commercial appointment");
-        appointment.setStatus(Appointment.Status.CONFIRMED);
-        appointment.setProperty(property);
-        appointment.setUserId(loggedInUserEmail);
-
-        appointmentService.saveAppointment(appointment);
-        emailService.sendConfirmationEmail(loggedInUserEmail, property, dateTime);
-    }
 }

@@ -1,10 +1,20 @@
 package com.example.application.views;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.application.model.Appointment;
 import com.example.application.model.Property;
+import com.example.application.model.User;
 import com.example.application.service.AuthService;
 import com.example.application.service.PropertyService;
+// import com.example.application.repository.AppointmentRepository;
+import com.example.application.service.AppointmentService;
+import com.example.application.service.UserService;
+import com.example.application.service.EmailService;
+
+
+
 
 
 import com.vaadin.flow.component.dependency.CssImport;
@@ -28,6 +38,10 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+
+
 @Route("admin")
 @PageTitle("Home | Real Estate App")
 @CssImport("./styles/admin-view.css")
@@ -35,11 +49,17 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
 
     private final AuthService authService;
     private final PropertyService propertyService;
+    private final AppointmentService appointmentService;
+    private final UserService userService;
+    private final EmailService emailService;
     private FlexLayout propertiesLayout;
 
-    public HomeView(AuthService authService, PropertyService propertyService) {
+    public HomeView(AuthService authService, PropertyService propertyService, AppointmentService appointmentService, UserService userService, EmailService emailService) {
         this.authService = authService;
         this.propertyService = propertyService;
+        this.appointmentService = appointmentService;
+        this.userService = userService;
+        this.emailService = emailService;
 
         addClassName("admin-view");
         setSizeFull();
@@ -55,10 +75,18 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
         addButton.addClassName("add-property-button");
         addButton.addClickListener(e -> openPropertyDialog(null));
 
+        Button appointmentButton = new Button("Manage Appointments");
+        appointmentButton.addClassName("add-property-button");
+        appointmentButton.addClickListener(e->showAllAppointments());
+
+        Button userButton = new Button("Manage Users");
+        userButton.addClassName("add-property-button");
+        userButton.addClickListener(e->showAllUsers());
+
         H2 title = new H2("Property Management");
         title.addClassName("page-title");
 
-        headerLayout.add(addButton, title);
+        headerLayout.add(addButton, appointmentButton, userButton, title);
         headerLayout.setVerticalComponentAlignment(Alignment.CENTER, title);
 
         // Properties layout
@@ -256,7 +284,137 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
         dialog.add(formLayout);
         dialog.open();
     }
+    private void showAllAppointments() {
+        Dialog dialog = new Dialog();
+        dialog.setWidth("900px");
+        dialog.setHeight("600px");
+    
+        Grid<Appointment> appointmentGrid = new Grid<>(Appointment.class, false);
+    
+        // Define visible columns
+        appointmentGrid.addColumn(Appointment::getAppointmentId)
+            .setHeader("Appointment ID").setAutoWidth(true);
+    
+        appointmentGrid.addColumn(Appointment::getDateTime)
+            .setHeader("Date & Time").setAutoWidth(true);
+    
+        appointmentGrid.addColumn(Appointment::getStatus)
+            .setHeader("Status").setAutoWidth(true);
+    
+        appointmentGrid.addColumn(appointment -> 
+            appointment.getProperty() != null ? appointment.getProperty().getTitle() : "N/A"
+        ).setHeader("Property").setAutoWidth(true);
+    
+        appointmentGrid.addColumn(Appointment::getUserId)
+            .setHeader("User Email").setAutoWidth(true);
+    
+        appointmentGrid.addColumn(Appointment::getNotes)
+            .setHeader("Notes").setAutoWidth(true).setFlexGrow(1);
+    
+        // Accept / Reject buttons
+        appointmentGrid.addComponentColumn(appointment -> {
+            HorizontalLayout actions = new HorizontalLayout();
+    
+            Button acceptBtn = new Button("Accept", click -> {
+                appointment.setStatus(Appointment.Status.CONFIRMED);
+                appointmentService.saveAppointment(appointment); 
+                String userID = appointment.getUserId();
+                Property property = new Property();
+                property = appointment.getProperty();
+                LocalDateTime datetime = appointment.getDateTime();
+                emailService.sendConfirmationEmail(userID, property, datetime);
+                Notification.show("Appointment confirmed.");
+                appointmentGrid.setItems(appointmentService
+                    .displayAllAppointments()
+                    .stream()
+                    .filter(a -> a.getStatus() == Appointment.Status.PENDING)
+                    .toList());
+            });
+    
+            Button rejectBtn = new Button("Reject", click -> {
+                appointment.setStatus(Appointment.Status.CANCELLED);
+                appointmentService.saveAppointment(appointment); 
+                Property property = new Property();
+                property = appointment.getProperty();
+                emailService.sendRejectionEmail(appointment.getUserId(),property);
+                Notification.show("Appointment rejected.");
+                appointmentGrid.setItems(appointmentService
+                    .displayAllAppointments()
+                    .stream()
+                    .filter(a -> a.getStatus() == Appointment.Status.PENDING)
+                    .toList());
+            });
+    
+            acceptBtn.getElement().getThemeList().add("primary");
+            rejectBtn.getElement().getThemeList().add("error");
+    
+            actions.add(acceptBtn, rejectBtn);
+            return actions;
+        }).setHeader("Actions").setAutoWidth(true);
+    
+        // Set only pending appointments
+        appointmentGrid.setItems(appointmentService.displayAllAppointments()
+            .stream()
+            .filter(a -> a.getStatus() == Appointment.Status.PENDING)
+            .toList());
+    
+        dialog.add(appointmentGrid);
+        dialog.open();
+    }
+    
 
+    private void showAllUsers(){
+        Dialog dialog = new Dialog();
+        dialog.setWidth("900px");
+        dialog.setHeight("600px");
+
+        Grid<User> userGrid = new Grid<>(User.class, false); // false to avoid auto columns
+
+        // Set columns with custom headers and value providers
+        userGrid.addColumn(user -> user.getUserId())
+            .setHeader("User ID").setAutoWidth(true);
+
+        userGrid.addColumn(user -> user.getName())
+            .setHeader("Name").setAutoWidth(true);
+
+        userGrid.addColumn(user -> user.getEmail())
+            .setHeader("Email ID").setAutoWidth(true);
+
+        userGrid.addColumn(user->user.getPhone())
+            .setHeader("Phone Number").setAutoWidth(true);
+
+        userGrid.addColumn(user->user.getRole())
+            .setHeader("Role").setAutoWidth(true);
+        
+
+        userGrid.addComponentColumn(user-> {
+            Button removeButton = new Button("Remove", e -> {
+                ConfirmDialog confirmDialog = new ConfirmDialog();
+                confirmDialog.setHeader("Confirmation");
+                confirmDialog.setText("Are you sure you want to remove this appointment?");
+
+                confirmDialog.setConfirmText("Delete");
+                confirmDialog.setCancelText("Cancel");
+                confirmDialog.addConfirmListener(event->{
+                    userService.deleteUser(user.getUserId());
+                    Notification.show("User Removed.",5000,Notification.Position.MIDDLE);
+                    userGrid.setItems(userService.displayAllUsers());
+                });
+                confirmDialog.open();
+
+            });
+            removeButton.getElement().getThemeList().add("error");
+            return removeButton;
+        }).setHeader("Actions").setAutoWidth(true);
+
+        userGrid.setItems(userService.displayAllUsers());
+        userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        userGrid.setWidth("1000px");
+        userGrid.setHeight("500px");
+
+        dialog.add(userGrid);
+        dialog.open();
+    }
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         if (!authService.isLoggedIn()) {

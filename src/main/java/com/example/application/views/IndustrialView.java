@@ -145,7 +145,9 @@ public class IndustrialView extends VerticalLayout {
         Button confirmButton = new Button("Confirm", event -> {
             LocalDateTime selectedDateTime = dateTimePicker.getValue();
             if (selectedDateTime != null) {
-                saveAppointmentAndSendEmail(property, selectedDateTime);
+                sendIntialEmail(selectedDateTime, property);
+
+                // saveAppointmentAndSendEmail(property, selectedDateTime);
                 dialog.close();
                 Notification.show("Appointment booked!", 3000, Notification.Position.TOP_CENTER);
             } else {
@@ -221,21 +223,21 @@ public class IndustrialView extends VerticalLayout {
         return loggedInUserEmail;
     }
 
-    private void saveAppointmentAndSendEmail(Property property, LocalDateTime dateTime) {
+    private void sendIntialEmail(LocalDateTime dateTime, Property property){
         String loggedInUserEmail = getLoggedInUserEmail();
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
             return;
         }
-
         Appointment appointment = new Appointment();
         appointment.setDateTime(dateTime);
         appointment.setNotes("Commercial appointment");
-        appointment.setStatus(Appointment.Status.CONFIRMED);
+        appointment.setStatus(Appointment.Status.PENDING);
         appointment.setProperty(property);
         appointment.setUserId(loggedInUserEmail);
-
         appointmentService.saveAppointment(appointment);
-        emailService.sendConfirmationEmail(loggedInUserEmail, property, dateTime);
+
+        emailService.sendIntialEmail(loggedInUserEmail);
+
     }
 }
