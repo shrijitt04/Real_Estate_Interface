@@ -11,6 +11,7 @@ import com.vaadin.flow.component.orderedlayout.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 import com.example.application.service.AppointmentService;
 import com.example.application.service.EmailService;
@@ -26,7 +29,8 @@ import com.example.application.model.Appointment;
 import com.example.application.model.Property;
 import com.example.application.model.Transactions;
 import com.example.application.service.TransactionService;
-
+import com.example.application.views.PropertyCardFactory;
+import com.example.application.model.PropertyBuilder;
 
 
 @PageTitle("Residential Properties")
@@ -39,14 +43,49 @@ public class ResidentialView extends VerticalLayout {
     private final EmailService emailService;
     private final TransactionService transactionService;
 
+    // Iterator for Property
+    class PropertyIterator implements Iterator<Property> {
+        private final List<Property> properties;
+        private int position = 0;
+
+        public PropertyIterator(List<Property> properties) {
+            this.properties = properties;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return position < properties.size();
+        }
+
+        @Override
+        public Property next() {
+            return properties.get(position++);
+        }
+    }
+
+    // Collection for Property
+    class PropertyCollection {
+        private final List<Property> properties = new ArrayList<>();
+
+        public void addProperty(Property property) {
+            properties.add(property);
+        }
+
+        public PropertyIterator createIterator() {
+            return new PropertyIterator(properties);
+        }
+    }
+
     @Autowired
-    public ResidentialView(PropertyService propertyService, AppointmentService appointmentService, EmailService emailService, TransactionService transactionService) {
+    public ResidentialView(PropertyService propertyService, AppointmentService appointmentService, JavaMailSender mailSender, TransactionService transactionService) {
         this.propertyService = propertyService;
         this.appointmentService = appointmentService;
-        this.emailService = emailService;
+        this.emailService = EmailService.getInstance(mailSender);
         this.transactionService = transactionService;
 
         List<Property> properties = propertyService.getPropertiesByType("RESIDENTIAL");
+        PropertyCollection propertyCollection = new PropertyCollection();
+        properties.forEach(propertyCollection::addProperty);
 
         addClassName("residential-view");
         setSizeFull();
@@ -59,80 +98,28 @@ public class ResidentialView extends VerticalLayout {
         FlexLayout cardsLayout = new FlexLayout();
         cardsLayout.addClassName("property-card-container");
 
-        properties.forEach(property -> {
-            Div card = createPropertyCard(property);
+        PropertyIterator iterator = propertyCollection.createIterator();
+        while (iterator.hasNext()) {
+            Property property = iterator.next();
+            Property builtProperty = new PropertyBuilder()
+                .setTitle(property.getTitle())
+                .setDescription(property.getDescription())
+                .setLocation(property.getLocation())
+                .setPrice(property.getPrice())
+                .setSize(property.getSize())
+                .setStatus(property.getStatus())
+                .setType(property.getType())
+                .build();
+
+            Div card = PropertyCardFactory.createPropertyCard(
+                builtProperty,
+                () -> openAppointmentDialog(builtProperty),
+                () -> openRegisterDialog(builtProperty)
+            );
             cardsLayout.add(card);
-        });
+        }
 
         add(header, cardsLayout);
-    }
-
-    private Div createPropertyCard(Property property) {
-        Div card = new Div();
-        card.addClassName("property-card");
-
-        H2 title = new H2(property.getTitle());
-        title.addClassName("property-title");
-
-        Div infoDiv = new Div();
-        infoDiv.addClassName("property-info");
-        Span location = new Span("Location: " + property.getLocation());
-        Span size = new Span("Size: " + property.getSize() + " sq.ft");
-        infoDiv.add(location, size);
-
-        Paragraph description = new Paragraph(property.getDescription());
-        description.addClassName("property-description");
-
-        H4 price = new H4("$" + property.getPrice());
-        price.addClassName("property-price");
-
-        Span status = new Span(property.getStatus());
-        status.addClassName("property-status");
-
-        if ("AVAILABLE".equalsIgnoreCase(property.getStatus())) {
-            status.addClassName("status-available");
-        } else if ("SOLD".equalsIgnoreCase(property.getStatus())) {
-            status.addClassName("status-sold");
-        } else if ("BOOKED".equalsIgnoreCase(property.getStatus())) {
-            status.addClassName("status-booked");
-        }
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.addClassName("button-container");
-
-        Button bookButton = new Button("Book Appointment");
-        bookButton.addClassName("book-button");
-
-        if (!"AVAILABLE".equalsIgnoreCase(property.getStatus())) {
-            bookButton.setEnabled(false);
-            bookButton.addClassName("disabled-button");
-        } else {
-            bookButton.addClickListener(e -> openAppointmentDialog(property));
-        }
-
-        Button registerButton = new Button("Register Land");
-        registerButton.addClassName("register-button");
-        registerButton.getElement().getStyle().set("background-color", "#FF9800");  // Custom color for "Register Land"
-
-        if (!"AVAILABLE".equalsIgnoreCase(property.getStatus())) {
-            registerButton.setEnabled(false);
-            registerButton.addClassName("disabled-button");
-        } else {
-            long propertyID = property.getPropertyId();
-            if(transactionService.hasUserRegisteredForProperty(getLoggedInUserEmail(), propertyID)){
-                registerButton.setEnabled(false);
-                registerButton.addClassName("disabled-button");
-                Notification.show("You have already registerd for this land",5000,Notification.Position.MIDDLE);            }
-            else{
-                registerButton.addClickListener(e -> openRegisterDialog(property));
-            }
-        }
-
-        buttonLayout.add(bookButton, registerButton);
-
-        card.add(title, infoDiv, description, price, status, buttonLayout);
-
-        return card;
     }
 
     private void openAppointmentDialog(Property property) {
@@ -181,22 +168,27 @@ public class ResidentialView extends VerticalLayout {
         dialog.open();
     }
 
-    private void sendIntialEmail(LocalDateTime dateTime, Property property){
+    private void sendIntialEmail(LocalDateTime dateTime, Property property) {
         String loggedInUserEmail = getLoggedInUserEmail();
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
             return;
         }
+
+        // Ensure the property is saved before associating it with the appointment
+        if (property.getPropertyId() == null) {
+            propertyService.saveProperty(property);
+        }
+
         Appointment appointment = new Appointment();
         appointment.setDateTime(dateTime);
-        appointment.setNotes("Commercial appointment");
+        appointment.setNotes("Residential appointment");
         appointment.setStatus(Appointment.Status.PENDING);
         appointment.setProperty(property);
         appointment.setUserId(loggedInUserEmail);
         appointmentService.saveAppointment(appointment);
 
         emailService.sendIntialEmail(loggedInUserEmail);
-
     }
 
     private void processRegistration(Property property) {
@@ -215,7 +207,7 @@ public class ResidentialView extends VerticalLayout {
         Transactions transaction = new Transactions();
         transaction.setAmount(50.00); 
         transaction.setBuyerId(loggedInUserEmail);
-        transaction.setPropertyId((long)property.getPropertyId());
+        transaction.setPropertyId(property.getPropertyId()); // Ensure type consistency with Long
         transaction.setStatus("PENDING"); 
 
         transactionService.saveTransaction(transaction);

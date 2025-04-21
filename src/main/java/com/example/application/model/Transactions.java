@@ -13,7 +13,7 @@ public class Transactions {
     private double amount;
     private String status; // 'CANCELLED', 'COMPLETED', or 'PENDING'
     private String buyerId;
-    private long propertyId;
+    private Long propertyId; // Updated to match the type in Property class
 
     @Column(unique = true, nullable = false)
     private String token;
@@ -60,11 +60,11 @@ public class Transactions {
         this.buyerId = buyerId;
     }
 
-    public long getPropertyId() {
+    public Long getPropertyId() {
         return propertyId;
     }
 
-    public void setPropertyId(long propertyId) {
+    public void setPropertyId(Long propertyId) {
         this.propertyId = propertyId;
     }
 

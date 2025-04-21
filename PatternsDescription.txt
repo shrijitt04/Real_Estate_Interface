@@ -1,0 +1,171 @@
+1. Singleton Pattern
+Example: EmailService is implemented as a singleton.
+Purpose: Ensures a single instance of EmailService is used throughout the application, promoting consistency, centralized configuration, and efficient resource usage.
+Benefits:
+Thread safety.
+Reduced resource consumption.
+Centralized control for easier debugging and management.
+
+2. Factory Pattern
+Example: PropertyCardFactory is used to create property cards for views like ResidentialView, CommercialView, and IndustrialView.
+Purpose: Centralizes the creation logic for property cards, reducing code duplication and ensuring consistency across views.
+Benefits:
+Reusability of the card creation logic.
+Consistent design across views.
+Easier maintainability as changes to the card design are made in one place.
+
+3. Builder Pattern
+Example: PropertyBuilder is used to construct Property objects in a modular and readable way.
+Purpose: Simplifies the creation of complex objects by chaining methods, improving code readability and maintainability.
+Benefits:
+Cleaner and more modular code.
+Easier to understand and maintain object creation logic.
+
+4. Iterator Pattern
+Example: PropertyIterator and PropertyCollection are used in views like ResidentialView, CommercialView, and IndustrialView.
+Purpose: Decouples the iteration logic from the views, making the code cleaner and more focused on UI concerns.
+Benefits:
+Decoupling of iteration logic from data structure.
+Reusability of the iterator across multiple views.
+Easier maintainability and flexibility for changes in iteration logic.
+
+
+SINGLETON PATTERN 
+Before (Without Singleton Pattern):
+Instantiation:
+
+The EmailService was likely instantiated directly or injected as a dependency using Spring's @Autowired annotation.
+Each view (IndustrialView, ResidentialView, etc.) might have had its own instance of EmailService.
+Resource Usage:
+
+Multiple instances of EmailService could have been created, leading to unnecessary resource usage (e.g., memory, initialization overhead).
+Centralized Control:
+
+There was no guarantee that all parts of the application were using the same instance of EmailService.
+Thread Safety:
+
+If multiple threads accessed EmailService, there could have been potential issues if the service wasn't designed to handle concurrency.
+Now (With Singleton Pattern):
+Instantiation:
+
+The EmailService is now instantiated only once using the getInstance() method.
+All views (IndustrialView, ResidentialView, etc.) share the same instance of EmailService.
+Resource Usage:
+
+Only one instance of EmailService is created and reused throughout the application, reducing resource consumption.
+Centralized Control:
+
+The Singleton Pattern ensures that all parts of the application use the same instance of EmailService, making it easier to manage and debug.
+Thread Safety:
+
+The getInstance() method uses a synchronized block to ensure thread-safe initialization of the EmailService.
+Key Benefits of the Singleton Pattern:
+Consistency:
+
+All parts of the application use the same instance of EmailService, ensuring consistent behavior.
+Efficiency:
+
+Reduces the overhead of creating multiple instances of EmailService.
+Centralized Configuration:
+
+Any changes to the EmailService (e.g., SMTP configuration) are applied globally since there's only one instance.
+Thread Safety:
+
+The Singleton Pattern ensures that the instance is safely initialized in a multi-threaded environment.
+
+
+
+
+
+Before Using the Factory Pattern
+Property Card Creation:
+
+The logic for creating property cards was duplicated across multiple views (ResidentialView, CommercialView, IndustrialView).
+Each view had its own method to create property cards, leading to code duplication and reduced maintainability.
+Code Structure:
+
+The property card creation logic was tightly coupled with the views, making it harder to reuse or modify.
+Maintainability:
+
+Any changes to the property card design (e.g., adding a new button or modifying styles) required updates in multiple places.
+Consistency:
+
+There was a risk of inconsistency in the property card design across different views due to duplicated logic.
+After Using the Factory Pattern
+Property Card Creation:
+
+The logic for creating property cards is centralized in the PropertyCardFactory class.
+The factory takes a Property object and callbacks for actions like booking appointments and registering land, making it reusable and modular.
+Code Structure:
+
+The views (ResidentialView, CommercialView, IndustrialView) now delegate the property card creation to the PropertyCardFactory, reducing code duplication.
+Maintainability:
+
+Changes to the property card design can now be made in a single place (the factory), simplifying updates and reducing the risk of errors.
+Consistency:
+
+The property card design is consistent across all views since the same factory is used.
+CSS Integration:
+
+Dedicated CSS files (residential-view.css, commercial-view.css, industrial-view.css) ensure that the property cards are styled appropriately for each view.
+
+
+
+
+Before Using the Builder Pattern
+Code in Views (e.g., ResidentialView)
+The Property objects were created directly by setting each field individually.
+This approach was verbose and less readable, especially when creating multiple Property objects.
+After Using the Builder Pattern
+Code in Views (e.g., ResidentialView)
+Property property = new Property();
+property.setTitle("Luxury Apartment");
+property.setDescription("A spacious 3-bedroom apartment with modern amenities.");
+property.setLocation("Downtown");
+property.setPrice(500000);
+property.setSize(1200);
+property.setStatus("AVAILABLE");
+property.setType("RESIDENTIAL");
+
+Div card = PropertyCardFactory.createPropertyCard(
+    property,
+    () -> openAppointmentDialog(property),
+    () -> openRegisterDialog(property)
+);
+The PropertyBuilder is used to construct Property objects in a more readable and modular way.
+The builder allows chaining of methods, making the code cleaner and easier to maintain.
+
+Property builtProperty = new PropertyBuilder()
+    .setTitle("Luxury Apartment")
+    .setDescription("A spacious 3-bedroom apartment with modern amenities.")
+    .setLocation("Downtown")
+    .setPrice(500000)
+    .setSize(1200)
+    .setStatus("AVAILABLE")
+    .setType("RESIDENTIAL")
+    .build();
+
+Div card = PropertyCardFactory.createPropertyCard(
+    builtProperty,
+    () -> openAppointmentDialog(builtProperty),
+    () -> openRegisterDialog(builtProperty)
+);
+
+
+Iterator Pattern 
+
+
+Before Using the Iterator Pattern
+Code Structure: The views (ResidentialView, CommercialView, IndustrialView) directly used a List<Property> to fetch and iterate over properties.
+Iteration Logic: The iteration logic was embedded directly in the views using a forEach loop.
+Drawbacks:
+Tight Coupling: The views were tightly coupled to the List implementation, making it harder to change the underlying data structure.
+Code Duplication: Each view had similar iteration logic, leading to redundancy.
+Limited Flexibility: If the iteration logic needed to change (e.g., filtering or sorting), it would require modifying each view.
+After Using the Iterator Pattern
+Code Structure: The views now use a PropertyCollection class to manage properties and a PropertyIterator to traverse them.
+Iteration Logic: The iteration logic is encapsulated in the PropertyIterator, making the views cleaner and more focused on UI concerns.
+Benefits:
+Decoupling: The views are decoupled from the underlying data structure, allowing flexibility to change it without affecting the views.
+Reusability: The PropertyIterator and PropertyCollection can be reused across multiple views or components.
+Maintainability: Centralizing the iteration logic in the iterator makes the code easier to maintain and extend

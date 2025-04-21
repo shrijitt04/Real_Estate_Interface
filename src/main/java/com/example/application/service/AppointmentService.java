@@ -22,7 +22,7 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
-    public void deleteAppointment(BigInteger id){
+    public void deleteAppointment(Long id){
         appointmentRepository.deleteById(id);
     }
 }

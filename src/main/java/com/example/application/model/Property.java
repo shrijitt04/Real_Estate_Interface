@@ -15,12 +15,13 @@ public class Property {
     private int size;
     private String status;
     private String title;
-    private String type;  // COMMERCIAL, INDUSTRIAL, RESIDENTIAL
+    private String type;  
 
     // Constructors
     public Property() {}
 
-    public Property(String description, String location, double price, int size, String status, String title, String type) {
+    public Property(Long propertyId,String description, String location, double price, int size, String status, String title, String type) {
+        this.propertyId = propertyId;
         this.description = description;
         this.location = location;
         this.price = price;

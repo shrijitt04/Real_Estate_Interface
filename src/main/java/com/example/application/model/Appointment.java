@@ -11,7 +11,7 @@ public class Appointment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private BigInteger appointmentId;
+    private long appointment_id;
 
     private LocalDateTime dateTime;
 
@@ -33,12 +33,12 @@ public class Appointment {
     }
 
     // Getters and setters
-    public BigInteger getAppointmentId() {
-        return appointmentId;
+    public long getAppointmentId() {
+        return appointment_id;
     }
 
-    public void setAppointmentId(BigInteger appointmentId) {
-        this.appointmentId = appointmentId;
+    public void setAppointmentId(long appointmentId) {
+        this.appointment_id = appointmentId;
     }
 
     public LocalDateTime getDateTime() {

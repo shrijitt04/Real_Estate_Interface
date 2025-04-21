@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.example.application.repository.TransactionRepository;
 import com.example.application.model.Transactions;
 
+import java.util.List;
 
 @Service
 public class TransactionService {
@@ -25,8 +26,12 @@ public class TransactionService {
         transactionRepository.save(transaction);
     }
 
-    public boolean hasUserRegisteredForProperty(String buyerId, long propertyId) {
+    public boolean hasUserRegisteredForProperty(String buyerId, Long propertyId) { // Updated to use Long
         return transactionRepository.existsByBuyerIdAndPropertyId(buyerId, propertyId);
+    }
+
+    public List<Transactions> displayAllTransactions() {
+        return transactionRepository.findAll();
     }
     
 }

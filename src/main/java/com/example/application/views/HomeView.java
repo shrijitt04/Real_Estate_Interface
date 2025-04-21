@@ -6,16 +6,17 @@ import java.util.List;
 import com.example.application.model.Appointment;
 import com.example.application.model.Property;
 import com.example.application.model.User;
+import com.example.application.model.Transactions;
 import com.example.application.service.AuthService;
 import com.example.application.service.PropertyService;
+import com.example.application.service.TransactionService;
 // import com.example.application.repository.AppointmentRepository;
 import com.example.application.service.AppointmentService;
 import com.example.application.service.UserService;
 import com.example.application.service.EmailService;
 
-
-
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Div;
@@ -52,14 +53,17 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
     private final AppointmentService appointmentService;
     private final UserService userService;
     private final EmailService emailService;
+    private final TransactionService transactionService;
     private FlexLayout propertiesLayout;
 
-    public HomeView(AuthService authService, PropertyService propertyService, AppointmentService appointmentService, UserService userService, EmailService emailService) {
-        this.authService = authService;
+    @Autowired
+    public HomeView(PropertyService propertyService, AppointmentService appointmentService, JavaMailSender mailSender, UserService userService, AuthService authService, TransactionService transactionService) {
+        this.transactionService = transactionService;
         this.propertyService = propertyService;
         this.appointmentService = appointmentService;
+        this.emailService = EmailService.getInstance(mailSender);
         this.userService = userService;
-        this.emailService = emailService;
+        this.authService = authService;
 
         addClassName("admin-view");
         setSizeFull();
@@ -83,10 +87,15 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
         userButton.addClassName("add-property-button");
         userButton.addClickListener(e->showAllUsers());
 
+        Button registrationButton = new Button("Manage Registrations");
+        registrationButton.addClassName("add-property-button");
+        registrationButton.addClickListener(e->showAllRegistrations());
+
         H2 title = new H2("Property Management");
         title.addClassName("page-title");
 
-        headerLayout.add(addButton, appointmentButton, userButton, title);
+
+        headerLayout.add(addButton, appointmentButton, userButton,registrationButton, title);
         headerLayout.setVerticalComponentAlignment(Alignment.CENTER, title);
 
         // Properties layout
@@ -362,7 +371,6 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
         dialog.open();
     }
     
-
     private void showAllUsers(){
         Dialog dialog = new Dialog();
         dialog.setWidth("900px");
@@ -415,6 +423,41 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
         dialog.add(userGrid);
         dialog.open();
     }
+
+    private void showAllRegistrations() {
+        Dialog dialog = new Dialog();
+        dialog.setWidth("900px");
+        dialog.setHeight("600px");
+    
+        Grid<Transactions> transactionGrid = new Grid<>(Transactions.class, false);
+    
+        transactionGrid.addColumn(Transactions::getTransactionId)
+            .setHeader("Transaction ID").setAutoWidth(true);
+    
+        transactionGrid.addColumn(Transactions::getAmount)
+            .setHeader("Amount").setAutoWidth(true);
+    
+        transactionGrid.addColumn(Transactions::getStatus)
+            .setHeader("Status").setAutoWidth(true);
+    
+        transactionGrid.addColumn(Transactions::getBuyerId)
+            .setHeader("Email").setAutoWidth(true);
+    
+        transactionGrid.addColumn(Transactions::getPropertyId)
+            .setHeader("Property ID").setAutoWidth(true);
+    
+        transactionGrid.addColumn(Transactions::getToken)
+            .setHeader("Token").setAutoWidth(true);
+    
+        transactionGrid.setItems(transactionService.displayAllTransactions()); // update this with your actual source
+        transactionGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        transactionGrid.setWidth("1000px");
+        transactionGrid.setHeight("500px");
+    
+        dialog.add(transactionGrid);
+        dialog.open();
+    }
+    
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         if (!authService.isLoggedIn()) {
