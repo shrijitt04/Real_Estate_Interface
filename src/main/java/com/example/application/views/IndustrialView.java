@@ -1,7 +1,6 @@
 package com.example.application.views;
 
 import com.vaadin.flow.component.button.Button;
-// import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -10,6 +9,8 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -21,59 +22,70 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import com.example.application.service.AppointmentService;
 import com.example.application.service.EmailService;
 import com.example.application.service.PropertyService;
+import com.example.application.service.TransactionService;
 import com.example.application.model.Appointment;
 import com.example.application.model.Property;
 import com.example.application.model.Transactions;
-import com.example.application.service.TransactionService;
+import com.example.application.model.TransactionBuilder;
 import com.example.application.views.PropertyCardFactory;
-import com.example.application.model.PropertyBuilder;
+import com.example.application.views.NotificationUtils;
+
+class IndustrialPropertyIterator implements Iterator<Property> {
+    private final List<Property> properties;
+    private int position = 0;
+
+    public IndustrialPropertyIterator(List<Property> properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return position < properties.size();
+    }
+
+    @Override
+    public Property next() {
+        if (!hasNext()) {
+            throw new NoSuchElementException("No more industrial properties in iterator");
+        }
+        return properties.get(position++);
+    }
+}
+
+class IndustrialPropertyCollection {
+    private final List<Property> properties = new ArrayList<>();
+
+    public void addProperty(Property property) {
+        if (property != null) {
+            properties.add(property);
+        }
+    }
+
+    public IndustrialPropertyIterator createIterator() {
+        return new IndustrialPropertyIterator(new ArrayList<>(properties));
+    }
+
+    public int size() {
+        return properties.size();
+    }
+}
 
 @PageTitle("Industrial Properties")
 @Route("industrial")
 @CssImport("./styles/industrial-view.css")
 public class IndustrialView extends VerticalLayout {
 
+    private static final Logger log = LoggerFactory.getLogger(IndustrialView.class);
+
     private final PropertyService propertyService;
     private final AppointmentService appointmentService;
     private final EmailService emailService;
     private final TransactionService transactionService;
-
-    // Iterator for Property
-    class PropertyIterator implements Iterator<Property> {
-        private final List<Property> properties;
-        private int position = 0;
-
-        public PropertyIterator(List<Property> properties) {
-            this.properties = properties;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return position < properties.size();
-        }
-
-        @Override
-        public Property next() {
-            return properties.get(position++);
-        }
-    }
-
-    // Collection for Property
-    class PropertyCollection {
-        private final List<Property> properties = new ArrayList<>();
-
-        public void addProperty(Property property) {
-            properties.add(property);
-        }
-
-        public PropertyIterator createIterator() {
-            return new PropertyIterator(properties);
-        }
-    }
 
     @Autowired
     public IndustrialView(PropertyService propertyService, AppointmentService appointmentService, JavaMailSender mailSender, TransactionService transactionService) {
@@ -82,119 +94,211 @@ public class IndustrialView extends VerticalLayout {
         this.emailService = EmailService.getInstance(mailSender);
         this.transactionService = transactionService;
 
-        List<Property> properties = propertyService.getPropertiesByType("INDUSTRIAL");
-        PropertyCollection propertyCollection = new PropertyCollection();
-        properties.forEach(propertyCollection::addProperty);
+        log.info("Initializing IndustrialView...");
+
+        List<Property> fetchedProperties;
+        try {
+            fetchedProperties = propertyService.getPropertiesByType("INDUSTRIAL");
+            log.debug("Fetched {} industrial properties from service.", fetchedProperties.size());
+        } catch (Exception e) {
+            log.error("Failed to fetch industrial properties", e);
+            fetchedProperties = new ArrayList<>();
+            Notification.show("Error loading properties. Please try refreshing.", 5000, Notification.Position.MIDDLE);
+        }
+
+        IndustrialPropertyCollection propertyCollection = new IndustrialPropertyCollection();
+        fetchedProperties.forEach(propertyCollection::addProperty);
 
         addClassName("industrial-view");
         setSizeFull();
         setPadding(true);
         setSpacing(true);
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
         H2 header = new H2("Industrial Properties");
         header.addClassName("view-header");
 
         FlexLayout cardsLayout = new FlexLayout();
+        cardsLayout.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        cardsLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         cardsLayout.addClassName("property-card-container");
 
-        PropertyIterator iterator = propertyCollection.createIterator();
-        while (iterator.hasNext()) {
-            Property property = iterator.next();
-            Property builtProperty = new PropertyBuilder()
-                .setTitle(property.getTitle())
-                .setDescription(property.getDescription())
-                .setLocation(property.getLocation())
-                .setPrice(property.getPrice())
-                .setSize(property.getSize())
-                .setStatus(property.getStatus())
-                .setType(property.getType())
-                .build();
+        IndustrialPropertyIterator iterator = propertyCollection.createIterator();
+        if (!iterator.hasNext()) {
+            add(header, new Paragraph("No industrial properties available at the moment."));
+        } else {
+            while (iterator.hasNext()) {
+                Property originalProperty = iterator.next();
 
-            Div card = PropertyCardFactory.createPropertyCard(
-                builtProperty,
-                () -> openAppointmentDialog(builtProperty),
-                () -> openRegisterDialog(builtProperty)
-            );
-            cardsLayout.add(card);
+                if (originalProperty == null || originalProperty.getPropertyId() == null) {
+                    log.warn("Skipping card creation for null property or property with null ID.");
+                    continue;
+                }
+
+                try {
+                    Div card = PropertyCardFactory.createPropertyCard(
+                        originalProperty,
+                        () -> openAppointmentDialog(originalProperty),
+                        () -> openRegisterDialog(originalProperty)
+                    );
+                    cardsLayout.add(card);
+                } catch (Exception e) {
+                    log.error("Error creating property card for property ID: {}", originalProperty.getPropertyId(), e);
+                }
+            }
+            add(header, cardsLayout);
         }
 
-        add(header, cardsLayout);
+        log.info("IndustrialView initialized successfully with {} cards.", cardsLayout.getComponentCount());
     }
 
     private void openAppointmentDialog(Property property) {
+        if (property == null || property.getPropertyId() == null) {
+            log.error("Attempted to open appointment dialog for invalid property: {}", property);
+            NotificationUtils.showStyledNotification("Cannot book appointment for this property (invalid data).", 3000);
+            return;
+        }
+        log.debug("Opening appointment dialog for property ID: {}", property.getPropertyId());
+
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Select Appointment Date & Time");
+        dialog.setHeaderTitle("Select Appointment Date & Time for '" + property.getTitle() + "'");
 
         VerticalLayout dialogLayout = new VerticalLayout();
+        dialogLayout.setPadding(true);
+        dialogLayout.setSpacing(true);
+        dialogLayout.setDefaultHorizontalComponentAlignment(Alignment.STRETCH);
+
         DateTimePicker dateTimePicker = new DateTimePicker("Appointment Date & Time");
-        dateTimePicker.setMin(LocalDateTime.now());
+        dateTimePicker.setMin(LocalDateTime.now().plusMinutes(5));
+        dateTimePicker.setStep(java.time.Duration.ofMinutes(30));
         dateTimePicker.setWidthFull();
 
-        Button confirmButton = new Button("Confirm", event -> {
+        Button confirmButton = new Button("Confirm Appointment", event -> {
             LocalDateTime selectedDateTime = dateTimePicker.getValue();
             if (selectedDateTime != null) {
                 sendIntialEmail(selectedDateTime, property);
-
-                // saveAppointmentAndSendEmail(property, selectedDateTime);
                 dialog.close();
-                Notification.show("Appointment booked!", 3000, Notification.Position.TOP_CENTER);
             } else {
-                Notification.show("Please select a date and time.");
+                NotificationUtils.showStyledNotification("Please select a valid date and time.", 3000);
             }
         });
+        confirmButton.getElement().getThemeList().add("primary");
 
-        dialogLayout.add(dateTimePicker, confirmButton);
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+
+        HorizontalLayout buttonLayout = new HorizontalLayout(confirmButton, cancelButton);
+        buttonLayout.setSpacing(true);
+        buttonLayout.setJustifyContentMode(JustifyContentMode.END);
+        buttonLayout.setWidthFull();
+
+        dialogLayout.add(dateTimePicker, buttonLayout);
         dialog.add(dialogLayout);
         dialog.open();
     }
 
     private void openRegisterDialog(Property property) {
+        if (property == null || property.getPropertyId() == null) {
+            log.error("Attempted to open registration dialog for invalid property: {}", property);
+            NotificationUtils.showStyledNotification("Cannot register for this property (invalid data).", 3000);
+            return;
+        }
+        log.debug("Opening registration dialog for property ID: {}", property.getPropertyId());
+
+        String loggedInUserEmail = getLoggedInUserEmail();
+        if (loggedInUserEmail == null) {
+             NotificationUtils.showStyledNotification("Could not identify user. Please log in.", 3000);
+             return;
+        }
+
+        try {
+            if (transactionService.hasUserRegisteredForProperty(loggedInUserEmail, property.getPropertyId())) {
+                NotificationUtils.showStyledNotification("You have already registered for this property.", 3000);
+                return;
+            }
+        } catch (Exception e) {
+            log.error("Error checking existing registration for user {} and property {}", loggedInUserEmail, property.getPropertyId(), e);
+            NotificationUtils.showStyledNotification("Could not verify registration status. Please try again.", 3000);
+            return;
+        }
+
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Confirm Registration");
 
         VerticalLayout dialogLayout = new VerticalLayout();
-        Paragraph confirmationText = new Paragraph("Are you sure you want to register this land?");
-        Button confirmButton = new Button("Yes, Register", event -> {
-            processRegistration(property);
-            dialog.close();
+        dialogLayout.setPadding(true);
+        dialogLayout.setSpacing(true);
+        dialogLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
-            Notification.show("Land registered successfully!", 3000, Notification.Position.TOP_CENTER);
+        Paragraph confirmationText = new Paragraph("Register your interest for industrial property: '" + property.getTitle() + "'?");
+        confirmationText.getStyle().set("text-align", "center");
+
+        Button confirmButton = new Button("Yes, Register", event -> {
+            processRegistration(property, loggedInUserEmail);
+            dialog.close();
         });
+        confirmButton.getElement().getThemeList().add("primary");
+
         Button cancelButton = new Button("Cancel", event -> dialog.close());
 
-        dialogLayout.add(confirmationText, confirmButton, cancelButton);
+        HorizontalLayout buttonLayout = new HorizontalLayout(confirmButton, cancelButton);
+        buttonLayout.setSpacing(true);
+
+        dialogLayout.add(confirmationText, buttonLayout);
         dialog.add(dialogLayout);
         dialog.open();
     }
 
-    private void processRegistration(Property property) {
-            try {
-            Thread.sleep(3000);  
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        String loggedInUserEmail = getLoggedInUserEmail();
-        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
+    private void processRegistration(Property property, String loggedInUserEmail) {
+        if (property == null || property.getPropertyId() == null || loggedInUserEmail == null) {
+            log.error("CRITICAL: processRegistration called with invalid arguments. Property: {}, Email: {}", property, loggedInUserEmail);
+            Notification.show("Internal Error: Cannot process registration.", 3000, Notification.Position.MIDDLE);
             return;
         }
 
-        Transactions transaction = new Transactions();
-        transaction.setAmount(50.00); 
-        transaction.setBuyerId(loggedInUserEmail);
-        transaction.setPropertyId(property.getPropertyId()); // Ensure type consistency with Long
-        transaction.setStatus("PENDING"); 
+        log.info("Processing registration for user '{}' and INDUSTRIAL property ID '{}'", loggedInUserEmail, property.getPropertyId());
+        NotificationUtils.showStyledNotification("Registration in progress...", 2000);
 
-        transactionService.saveTransaction(transaction);
+        if ("SOLD".equalsIgnoreCase(property.getStatus()) || "PENDING".equalsIgnoreCase(property.getStatus())) {
+             log.warn("Attempt to register for property ID {} which is already {}", property.getPropertyId(), property.getStatus());
+             NotificationUtils.showStyledNotification("This property is no longer available for registration.", 3000);
+             return;
+        }
 
-        // Simulate completing the transaction
-        transaction.setStatus("COMPLETED");
-        transactionService.updateTransaction(transaction);
-        String token = transaction.getToken();
-        emailService.sendTransactionEmail(loggedInUserEmail, property, token);
+        Transactions transaction = new TransactionBuilder()
+            .setAmount(150.00)
+            .setBuyerId(loggedInUserEmail)
+            .setPropertyId(property.getPropertyId())
+            .setStatus("PENDING")
+            .build();
 
-        System.out.println("Transaction completed for user: " + loggedInUserEmail);
+        try {
+            transactionService.saveTransaction(transaction);
+            log.info("Initial transaction record saved with ID: {} (Status: PENDING)", transaction.getTransactionId());
+
+            Thread.sleep(500);
+
+            transaction.setStatus("COMPLETED");
+            transactionService.updateTransaction(transaction);
+            log.info("Transaction ID {} status updated to COMPLETED.", transaction.getTransactionId());
+
+            String token = transaction.getToken();
+            if (token == null) {
+                log.warn("Transaction token was null after saving/updating transaction ID: {}", transaction.getTransactionId());
+            }
+
+            emailService.sendTransactionEmail(loggedInUserEmail, property, token);
+            log.info("Transaction completion email sent to {} for property '{}'", loggedInUserEmail, property.getTitle());
+
+            NotificationUtils.showStyledNotification("Registration successful! Check your email.", 3000);
+
+        } catch (InterruptedException e) {
+            log.warn("Thread sleep interrupted during registration simulation", e);
+            Thread.currentThread().interrupt();
+            Notification.show("Registration process was interrupted.", 3000, Notification.Position.MIDDLE);
+        } catch (Exception e) {
+            log.error("Error processing registration transaction, updating property status (if applicable), or sending email for user {}", loggedInUserEmail, e);
+            Notification.show("Registration failed. Please try again later or contact support.", 5000, Notification.Position.MIDDLE);
+        }
     }
 
     private String getLoggedInUserEmail() {
@@ -202,30 +306,57 @@ public class IndustrialView extends VerticalLayout {
         String filePath = "email.txt";
         try {
             loggedInUserEmail = Files.readString(Paths.get(filePath)).trim();
-            System.out.println("Read email: " + loggedInUserEmail);
+            log.debug("Read email from file {}: '{}'", filePath, loggedInUserEmail);
+            if (loggedInUserEmail.isEmpty()) {
+                 log.warn("Email read from file {} is empty.", filePath);
+                 return null;
+            }
+            if (!loggedInUserEmail.contains("@")) {
+                log.warn("Invalid email format read from file {}: {}", filePath, loggedInUserEmail);
+                return null;
+            }
         } catch (NoSuchFileException e) {
-            System.err.println("Email file not found: " + filePath);
+            log.error("Email file not found: {}", filePath);
         } catch (IOException e) {
-            System.err.println("Error reading email from file: " + e.getMessage());
+            log.error("IOException reading email from file: {}", filePath, e);
+        } catch (Exception e) {
+            log.error("Unexpected error reading email from file: {}", filePath, e);
         }
         return loggedInUserEmail;
     }
 
-    private void sendIntialEmail(LocalDateTime dateTime, Property property){
+    private void sendIntialEmail(LocalDateTime dateTime, Property property) {
         String loggedInUserEmail = getLoggedInUserEmail();
-        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            Notification.show("Error: Could not determine user email.", 3000, Notification.Position.TOP_CENTER);
+        if (loggedInUserEmail == null) {
+            Notification.show("Error: Could not determine user email. Please log in.", 3000, Notification.Position.TOP_CENTER);
+            log.error("Failed to send initial email: User email not found.");
             return;
         }
+
+        if (property == null || property.getPropertyId() == null) {
+             Notification.show("Error: Cannot book appointment due to invalid property data.", 3000, Notification.Position.TOP_CENTER);
+             log.error("CRITICAL: sendIntialEmail called with invalid property: {}", property);
+             return;
+        }
+
+        log.info("Creating appointment for user '{}' for INDUSTRIAL property ID '{}' at {}", loggedInUserEmail, property.getPropertyId(), dateTime);
+
         Appointment appointment = new Appointment();
         appointment.setDateTime(dateTime);
-        appointment.setNotes("Commercial appointment");
+        appointment.setNotes("Industrial property appointment: " + property.getTitle());
         appointment.setStatus(Appointment.Status.PENDING);
         appointment.setProperty(property);
         appointment.setUserId(loggedInUserEmail);
-        appointmentService.saveAppointment(appointment);
 
-        emailService.sendIntialEmail(loggedInUserEmail);
-
+        try {
+            appointmentService.saveAppointment(appointment);
+            log.info("Appointment saved successfully with ID: {}", appointment.getAppointmentId());
+            emailService.sendIntialEmail(loggedInUserEmail);
+            log.info("Initial confirmation email sent to {}", loggedInUserEmail);
+            NotificationUtils.showStyledNotification("Appointment requested. Check your email for confirmation.", 3000);
+        } catch (Exception e) {
+            log.error("Error saving appointment or sending initial email for user {}", loggedInUserEmail, e);
+            Notification.show("Error booking appointment. Please try again later.", 5000, Notification.Position.MIDDLE);
+        }
     }
 }

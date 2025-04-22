@@ -2,6 +2,8 @@ package com.example.application.views;
 
 import com.example.application.service.UserService;
 import com.example.application.model.User;
+import com.example.application.views.NotificationUtils;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
@@ -45,8 +47,8 @@ public class SignupView extends VerticalLayout {
             try {
                 if (nameField.isEmpty() || emailField.isEmpty() || passwordField.isEmpty() || 
                     phoneField.isEmpty() || roleGroup.isEmpty()) {
-                    Notification.show("Please fill all fields");
-                    return;
+                        NotificationUtils.showStyledNotification("Please fill all fields", 3000);
+                        return;
                 }
 
                 User user = new User();
@@ -57,10 +59,10 @@ public class SignupView extends VerticalLayout {
                 user.setRole(roleGroup.getValue());
 
                 userService.saveUser(user);
-                Notification.show("User registered successfully!");
+                NotificationUtils.showStyledNotification("User registered successfully!", 3000);
                 clearForm(nameField, emailField, passwordField, phoneField, roleGroup);
             } catch (Exception e) {
-                Notification.show("Registration failed: " + e.getMessage());
+                NotificationUtils.showStyledNotification("Registration failed: " + e.getMessage(), 3000);   
                 e.printStackTrace();
             }
         });

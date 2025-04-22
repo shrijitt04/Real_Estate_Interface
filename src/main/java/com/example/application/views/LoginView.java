@@ -2,12 +2,14 @@ package com.example.application.views;
 
 import com.example.application.service.AuthService;
 import com.example.application.service.UserService;
+import com.example.application.views.NotificationUtils;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.router.PageTitle;
@@ -55,38 +57,34 @@ public class LoginView extends VerticalLayout {
             String role = roleGroup.getValue(); 
 
             if (email == null || email.isEmpty() || password == null || password.isEmpty() || role == null || role.isEmpty()) {
-                Notification.show("Please enter email, password, and select an appropriate role");
+                NotificationUtils.showStyledNotification("Please fill in all fields", 3000);
                 return;
             }
 
             if (authService.login(email, password, role, userService)) {
-                Notification.show("Login successful!");
+                NotificationUtils.showStyledNotification("Login successful", 3000);
 
-                // --- Correct String Comparison ---
-                if ("Admin".equals(role)) { // Use .equals() for strings!
+                if ("Admin".equals(role)) { 
                     getUI().ifPresent(ui -> ui.navigate("admin"));
                 }
-                // Optional: Be explicit about the Buyer role if needed
-                // else if ("Buyer".equals(role)) {
-                else { // Handles "Buyer" and potentially any other non-Admin role
-                    String filepath = "email.txt"; // Path relative to app working directory
+                
+                else { 
+                    String filepath = "email.txt"; 
                     try {
                         Files.writeString(Paths.get(filepath),
                                 email,
                                 StandardOpenOption.CREATE,
                                 StandardOpenOption.WRITE,
-                                StandardOpenOption.TRUNCATE_EXISTING); // Overwrites file!
+                                StandardOpenOption.TRUNCATE_EXISTING);
 
-                        // --- Correct Placement of Success Message ---
-                        System.out.println("!!!WARNING!!! Written successfully to potentially insecure file: " + filepath);
+                        System.out.println("!!!WARNING!!! Written successfully " + filepath);
 
                     } catch (IOException e) {
                         System.err.println("!!!ERROR!!! Failed to write email to temporary file: " + e.getMessage());
-                        // Prevent navigation if file write fails crucial step
                         Notification.show("Internal error saving session info. Please try again.");
                         return; // Stop processing here
                     }
-                    // Navigate only after successful file write (if that's the intent)
+        
                     getUI().ifPresent(ui -> ui.navigate("User_Home"));
                 }
             } else {

@@ -6,6 +6,7 @@ Thread safety.
 Reduced resource consumption.
 Centralized control for easier debugging and management.
 
+
 2. Factory Pattern
 Example: PropertyCardFactory is used to create property cards for views like ResidentialView, CommercialView, and IndustrialView.
 Purpose: Centralizes the creation logic for property cards, reducing code duplication and ensuring consistency across views.
@@ -22,7 +23,7 @@ Cleaner and more modular code.
 Easier to understand and maintain object creation logic.
 
 4. Iterator Pattern
-Example: PropertyIterator and PropertyCollection are used in views like ResidentialView, CommercialView, and IndustrialView.
+Example: PropertyIterator and PropertyCollection are used in views likek ResidentialView, CommercialView, and IndustrialView.
 Purpose: Decouples the iteration logic from the views, making the code cleaner and more focused on UI concerns.
 Benefits:
 Decoupling of iteration logic from data structure.
@@ -113,44 +114,8 @@ Dedicated CSS files (residential-view.css, commercial-view.css, industrial-view.
 
 
 Before Using the Builder Pattern
-Code in Views (e.g., ResidentialView)
-The Property objects were created directly by setting each field individually.
-This approach was verbose and less readable, especially when creating multiple Property objects.
-After Using the Builder Pattern
-Code in Views (e.g., ResidentialView)
-Property property = new Property();
-property.setTitle("Luxury Apartment");
-property.setDescription("A spacious 3-bedroom apartment with modern amenities.");
-property.setLocation("Downtown");
-property.setPrice(500000);
-property.setSize(1200);
-property.setStatus("AVAILABLE");
-property.setType("RESIDENTIAL");
 
-Div card = PropertyCardFactory.createPropertyCard(
-    property,
-    () -> openAppointmentDialog(property),
-    () -> openRegisterDialog(property)
-);
-The PropertyBuilder is used to construct Property objects in a more readable and modular way.
-The builder allows chaining of methods, making the code cleaner and easier to maintain.
-
-Property builtProperty = new PropertyBuilder()
-    .setTitle("Luxury Apartment")
-    .setDescription("A spacious 3-bedroom apartment with modern amenities.")
-    .setLocation("Downtown")
-    .setPrice(500000)
-    .setSize(1200)
-    .setStatus("AVAILABLE")
-    .setType("RESIDENTIAL")
-    .build();
-
-Div card = PropertyCardFactory.createPropertyCard(
-    builtProperty,
-    () -> openAppointmentDialog(builtProperty),
-    () -> openRegisterDialog(builtProperty)
-);
-
+Used in TransactionBuilder now 
 
 Iterator Pattern 
 
@@ -169,3 +134,21 @@ Benefits:
 Decoupling: The views are decoupled from the underlying data structure, allowing flexibility to change it without affecting the views.
 Reusability: The PropertyIterator and PropertyCollection can be reused across multiple views or components.
 Maintainability: Centralizing the iteration logic in the iterator makes the code easier to maintain and extend
+
+
+
+Here is where you are applying the mentioned principles in your code:
+
+1. Open/Closed Principle (OCP):
+Where: The HomeView class uses services like PropertyService, AppointmentService, and TransactionService to perform operations. 
+These services can be extended with new functionality without modifying the HomeView class.
+Explanation: The HomeView class is open for extension (e.g., adding new services or features) but closed for modification, as the logic for managing properties, appointments, and transactions is encapsulated in their respective services.
+2. Separation of Concerns:
+Where: The HomeView class separates UI logic (e.g., creating property cards, dialogs) from business logic (e.g., saving properties, managing appointments).
+Explanation: Each layer of the application has a distinct responsibility. For example, the PropertyService handles property-related operations, while the HomeView focuses on rendering the UI and interacting with the user.
+3. Single Responsibility Principle (SRP):
+Where: Methods like refreshProperties, showAllAppointments, and showAllUsers in the HomeView class each have a single responsibility.
+Explanation: Each method is responsible for a specific task, such as refreshing the property list or displaying appointments, ensuring the class remains modular and easier to maintain.
+4. Liskov Substitution Principle (LSP):
+Where: The Grid component in methods like showAllAppointments and showAllRegistrations is used with different data types (Appointment, Transactions).
+Explanation: The Grid class adheres to LSP by allowing substitution with any compatible data type, ensuring that the behavior of the Grid remains consistent regardless of the data type used.
