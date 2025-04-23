@@ -1,9 +1,7 @@
 package com.example.application.views;
 
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;  
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;   
 
 public class NotificationUtils {
 
