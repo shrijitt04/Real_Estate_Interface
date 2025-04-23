@@ -76,8 +76,6 @@ The Singleton Pattern ensures that the instance is safely initialized in a multi
 
 
 
-
-
 Before Using the Factory Pattern
 Property Card Creation:
 
@@ -114,8 +112,20 @@ Dedicated CSS files (residential-view.css, commercial-view.css, industrial-view.
 
 
 Before Using the Builder Pattern
+The Builder Pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations.
 
-Used in TransactionBuilder now 
+Usage - TransactionBuilder 
+•	TransactionBuilder class has been used to construct or build Transactions objects.
+•	This pattern simplifies the creation of complex Transactions objects with multiple optional attributes.
+•	If this pattern is not used, Transactions will have to be built using a constructor with multiple parameters. This constructor call will make the code more cluttered, less readable and very difficult to understand.
+•	Adding or modifying parameters would require changes to be made at multiple changes.
+•	The TransactionsBuilder class now provides a fluent interface for constructing Trasactions object. It allows to chain methods to set properties which makes the code cleaner and easier to understand.
+
+Benefits
+•	Improves code readability and reduces errors.
+•	Supports immutability by ensuring objects are fully constructed before use.
+•	Makes object construction flexible and intuitive
+
 
 Iterator Pattern 
 
