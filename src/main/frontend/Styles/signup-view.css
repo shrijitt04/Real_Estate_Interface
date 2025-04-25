@@ -1,64 +1,80 @@
-/* Custom styles for Real Estate App */
-.login-view {
+/* Custom styles for Real Estate App - SignupView */
+.signup-view {
     background-color: var(--lumo-contrast-5pct);
     background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7));
     background-size: cover;
     background-position: center;
   }
   
-  .login-card {
+  .signup-card {
     background-color: var(--lumo-base-color);
     border-radius: var(--lumo-border-radius-l);
     box-shadow: var(--lumo-box-shadow-m);
     padding: var(--lumo-space-l);
-    max-width: 400px;
+    max-width: 450px;
     width: 100%;
   }
   
-  .login-header {
+  .signup-header {
     margin-bottom: var(--lumo-space-m);
     text-align: center;
   }
   
-  .login-logo {
+  .signup-logo {
     height: 60px;
     margin-bottom: var(--lumo-space-s);
   }
   
-  .login-title {
+  .signup-title {
     color: var(--lumo-primary-color);
     font-weight: 600;
     margin: 0;
   }
   
-  .login-subtitle {
+  .signup-subtitle {
     color: var(--lumo-secondary-text-color);
     font-size: var(--lumo-font-size-s);
     margin-top: var(--lumo-space-xs);
   }
   
-  .login-form-field {
+  .signup-form-field {
     width: 100%;
     margin-bottom: var(--lumo-space-m);
   }
   
-  .login-button {
+  .signup-button {
     margin-top: var(--lumo-space-m);
     width: 100%;
   }
   
-  .login-footer {
+  .signup-footer {
     margin-top: var(--lumo-space-l);
     text-align: center;
     color: var(--lumo-secondary-text-color);
   }
   
-  .login-footer a {
+  .signup-footer a {
     color: var(--lumo-primary-color);
     text-decoration: none;
     font-weight: 500;
   }
   
-  .login-footer a:hover {
+  .signup-footer a:hover {
     text-decoration: underline;
+  }
+  
+  /* Style for radio buttons */
+  .signup-form-field vaadin-radio-button {
+    margin-right: var(--lumo-space-m);
+  }
+  
+  /* Style for form validation */
+  .invalid-field {
+    border-color: var(--lumo-error-color);
+  }
+  
+  .field-error-message {
+    color: var(--lumo-error-color);
+    font-size: var(--lumo-font-size-xs);
+    margin-top: var(--lumo-space-xs);
   }

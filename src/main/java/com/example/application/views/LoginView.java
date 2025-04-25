@@ -4,17 +4,25 @@ import com.example.application.service.AuthService;
 import com.example.application.service.UserService;
 import com.example.application.views.NotificationUtils;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +31,7 @@ import java.nio.file.StandardOpenOption;
 
 @Route("")
 @PageTitle("Login | Real Estate App")
+@CssImport("./styles/login-view.css")
 public class LoginView extends VerticalLayout {
 
     private final UserService userService;
@@ -32,26 +41,62 @@ public class LoginView extends VerticalLayout {
         this.userService = userService;
         this.authService = authService;
 
+        // Main layout setup
+        addClassName("login-view");
+        setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
-        setWidthFull();
-        setHeightFull();
 
-        H2 title = new H2("Login to Real Estate App");
+        // Create card container
+        VerticalLayout loginCard = new VerticalLayout();
+        loginCard.addClassName("login-card");
+        loginCard.setAlignItems(Alignment.CENTER);
+        loginCard.setPadding(true);
+        loginCard.setSpacing(true);
 
-        EmailField emailField = new EmailField("Email");
+        // Header with logo and title
+        Div headerDiv = new Div();
+        headerDiv.addClassName("login-header");
+        
+        Image logo = new Image("themes/realestate/images/real-estate-logo.png", "Real Estate App Logo");
+        logo.addClassName("login-logo");
+        
+        H2 title = new H2("Welcome Back");
+        title.addClassName("login-title");
+        
+        Paragraph subtitle = new Paragraph("Sign in to access your account");
+        subtitle.addClassName("login-subtitle");
+        
+        headerDiv.add(logo, title, subtitle);
+
+        // Form fields
+        EmailField emailField = new EmailField();
+        emailField.setLabel("Email");
+        emailField.setPrefixComponent(VaadinIcon.ENVELOPE.create());
         emailField.setRequiredIndicatorVisible(true);
-        emailField.setWidth("300px");
+        emailField.addClassName("login-form-field");
+        emailField.setPlaceholder("your.email@example.com");
 
-        PasswordField passwordField = new PasswordField("Password");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setLabel("Password");
+        passwordField.setPrefixComponent(VaadinIcon.LOCK.create());
         passwordField.setRequiredIndicatorVisible(true);
-        passwordField.setWidth("300px");
+        passwordField.addClassName("login-form-field");
+        passwordField.setPlaceholder("Enter your password");
 
         RadioButtonGroup<String> roleGroup = new RadioButtonGroup<>();
-        roleGroup.setLabel("Role");
-        roleGroup.setItems("Buyer", "Admin"); 
+        roleGroup.setLabel("Login as");
+        roleGroup.setItems("Buyer", "Admin");
+        roleGroup.setValue("Buyer"); // Set default value
+        roleGroup.addClassName("login-form-field");
 
-        Button loginButton = new Button("Login", event -> {
+        // Login button
+        Button loginButton = new Button("Login");
+        loginButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        loginButton.addClassName("login-button");
+        loginButton.setIcon(new Icon(VaadinIcon.SIGN_IN));
+        
+        loginButton.addClickListener(event -> {
             String email = emailField.getValue();
             String password = passwordField.getValue();
             String role = roleGroup.getValue(); 
@@ -88,14 +133,23 @@ public class LoginView extends VerticalLayout {
                     getUI().ifPresent(ui -> ui.navigate("User_Home"));
                 }
             } else {
-                Notification.show("Bad Credentials");
+                Notification.show("Invalid email or password. Please try again.");
             }
         });
 
-        Paragraph signupText = new Paragraph("Don't have an account? ");
+        // Footer with signup link
+        Div footerDiv = new Div();
+        footerDiv.addClassName("login-footer");
+        
+        Span signupText = new Span("Don't have an account? ");
         RouterLink signupLink = new RouterLink("Sign up", SignupView.class);
-        signupText.add(signupLink);
+        
+        footerDiv.add(signupText, signupLink);
 
-        add(title, emailField, passwordField, roleGroup, loginButton, signupText);
+        // Add all components to the card
+        loginCard.add(headerDiv, emailField, passwordField, roleGroup, loginButton, footerDiv);
+
+        // Add the card to the main layout
+        add(loginCard);
     }
 }

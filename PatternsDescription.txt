@@ -127,7 +127,7 @@ Benefits
 •	Makes object construction flexible and intuitive
 
 
-Iterator Pattern 
+Iterator Pattern DOUBT
 
 
 Before Using the Iterator Pattern
@@ -160,5 +160,6 @@ Explanation: Each layer of the application has a distinct responsibility. For ex
 Where: Methods like refreshProperties, showAllAppointments, and showAllUsers in the HomeView class each have a single responsibility.
 Explanation: Each method is responsible for a specific task, such as refreshing the property list or displaying appointments, ensuring the class remains modular and easier to maintain.
 4. Liskov Substitution Principle (LSP):
-Where: The Grid component in methods like showAllAppointments and showAllRegistrations is used with different data types (Appointment, Transactions).
-Explanation: The Grid class adheres to LSP by allowing substitution with any compatible data type, ensuring that the behavior of the Grid remains consistent regardless of the data type used.
+PropertyCardFactory:
+The PropertyCardFactory creates property cards for different views (e.g., ResidentialView, CommercialView, IndustrialView).
+The factory ensures that the cards it generates are compatible with the views, allowing the views to use them interchangeably without any issues.
